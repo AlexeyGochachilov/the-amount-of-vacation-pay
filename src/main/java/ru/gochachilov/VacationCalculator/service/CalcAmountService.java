@@ -39,8 +39,11 @@ public class CalcAmountService {
     }
 
     private BigDecimal simpleCalc(BigDecimal avgMonthAmount, Integer numberVacDays){
-        return amountOfVacation(numberVacDays, avgMonthAmount);
-
+        BigDecimal avgDay = avgDayAmount(avgMonthAmount);
+        return BigDecimal
+                .valueOf(numberVacDays)
+                .multiply(avgDay.subtract(incomeTaxPerDay(avgDay)))
+                .setScale(2, RoundingMode.HALF_UP);
     }
 
     private BigDecimal withHolidaysCalc(BigDecimal avgMonthAmount,
@@ -51,7 +54,7 @@ public class CalcAmountService {
                 .removeAll(CalculateParam.getInstance().getVocationDays());
         var totalVacDays = vacDaysBase.size();
 
-        return amountOfVacation(totalVacDays, avgMonthAmount);
+        return simpleCalc(avgMonthAmount, totalVacDays);
     }
 
     private BigDecimal avgDayAmount(BigDecimal avgMonthAmount){
@@ -60,14 +63,6 @@ public class CalcAmountService {
 
     private BigDecimal incomeTaxPerDay(BigDecimal avgDayAmount){
         return avgDayAmount.multiply(CalculateParam.getInstance().getIncomeTax());
-    }
-
-    private BigDecimal amountOfVacation(Integer vacationDays, BigDecimal avgMonthAmount){
-        var avgDay = avgDayAmount(avgMonthAmount);
-        return BigDecimal
-                .valueOf(vacationDays)
-                .multiply(avgDay.subtract(incomeTaxPerDay(avgDay)))
-                .setScale(2, RoundingMode.HALF_UP);
     }
 
     private Set<LocalDate> loadVacDaysBase(LocalDate firstDay, Integer numberOfDays){
